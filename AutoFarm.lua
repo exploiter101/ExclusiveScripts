@@ -78,7 +78,7 @@ local MainTab = Window:Tab({
 MainTab:Select()
 -- Auto Farm Toggle
 local autoFarmToggle = MainTab:Toggle({
-    Title = "🎃 Auto Farm Coins",
+    Title = "Auto Farm Coins",
     Desc = "Automatically collect coins",
     Default = false,
     Callback = function(state)
@@ -88,7 +88,7 @@ local autoFarmToggle = MainTab:Toggle({
 })
 -- Auto Reset Toggle
 local autoResetToggle = MainTab:Toggle({
-    Title = "💀 Auto Reset",
+    Title = "Auto Reset",
     Desc = "Auto reset when bag is full",
     Default = false,
     Callback = function(state)
@@ -98,7 +98,7 @@ local autoResetToggle = MainTab:Toggle({
 })
 -- Disable Render Toggle
 local renderToggle = MainTab:Toggle({
-    Title = "👻 Disable Render",
+    Title = "Disable Render",
     Desc = "Improves performance",
     Default = false,
     Callback = function(state)
