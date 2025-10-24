@@ -21,94 +21,176 @@ loadstring(game:HttpGet("https://paste.debian.net/plainh/4600c3d2/", true))()
 wait(0.5)
 if not game:IsLoaded() then game.Loaded:Wait() end
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+-- Apply Halloween Theme with darker buttons
 WindUI:AddTheme({
-    Name = "Halloween",
+    Name = "Halloween", -- Halloween theme name
+    
     Accent = WindUI:Gradient({                                                  
         ["0"] = { Color = Color3.fromHex("#FF7518"), Transparency = 0 },        -- Orange
         ["100"]   = { Color = Color3.fromHex("#8B4513"), Transparency = 0 },    -- Brown
     }, {                                                                        
         Rotation = 0,                                                           
     }),                                                                         
-    Dialog = Color3.fromHex("#150A00"),      
-    Outline = Color3.fromHex("#FF7518"),     
-    Text = Color3.fromHex("#FFFFFF"),        
-    Placeholder = Color3.fromHex("#7A5C34"),
-    Background = Color3.fromHex("#0A0500"),  
-    Button = Color3.fromHex("#1A1005"),      
-    Icon = Color3.fromHex("#FF9518")         
+    Dialog = Color3.fromHex("#1A0F00"),      -- Dark brown
+    Outline = Color3.fromHex("#0D0700"),     -- Orange outline
+    Text = Color3.fromHex("#FFFFFF"),        -- White text
+    Placeholder = Color3.fromHex("#7A5C34"), -- Medium brown
+    Background = Color3.fromHex("#0D0700"),  -- Very dark brown/black
+    Button = Color3.fromHex("#2A1A0A"),      -- Darker brown buttons (was #3D2A13)
+    Icon = Color3.fromHex("#FF9518")         -- Bright orange icons
 })
+
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
-local workspace = game:GetService("Workspace")
+
 local player = Players.LocalPlayer
--- Variables
-local autoFarmEnabled = false
-local autoResetEnabled = false
-local disableRenderEnabled = false
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local visitedPositions = {}
+local isActive = false
+local flySpeed = 15
+local collected = 0
+local startTime = 0
 local antiAFK = false
-local farming = false
-local bag_full = false
-local resetting = false
-local start_position = nil
--- MM2 Remotes
-local CoinCollected = ReplicatedStorage.Remotes.Gameplay.CoinCollected
-local RoundStart = ReplicatedStorage.Remotes.Gameplay.RoundStart
-local RoundEnd = ReplicatedStorage.Remotes.Gameplay.RoundEndFade
--- Create Window
+
+player.CharacterAdded:Connect(function(char)
+    character = char
+    rootPart = char:WaitForChild("HumanoidRootPart")
+    visitedPositions = {}
+end)
+
+local collectSound = Instance.new("Sound", rootPart)
+collectSound.SoundId = "rbxassetid://12221967"
+collectSound.Volume = 1
+
 local Window = WindUI:CreateWindow({
-    Title = "Halloween Event AutoFarm V3",
-    Icon = "ghost",
-    Folder = "MM2_Farm",
+    Title = "Halloween Candy Autofarm",
+    Icon = "coins",
+    Folder = "AutoFarm",
     Theme = "Halloween",
-    Background = "https://tr.rbxcdn.com/180DAY-2d85bbfdad337727a02723d3eac5b51d/768/432/Image/Webp/noFilter",
+    Background = "https://tr.rbxcdn.com/180DAY-2d85bbfdad337727a02723d3eac5b51d/768/432/Image/Webp/noFilter"
 })
+
 -- Disable topbar buttons
 Window:DisableTopbarButtons({
     "Close", 
     "Fullscreen",
 })
-local MainTab = Window:Tab({
-    Title = "Main",
-    Icon = "skull"
+
+local Tab = Window:Tab({
+    Title = "Auto Farm",
+    Icon = "bird"
 })
-MainTab:Select()
--- Auto Farm Toggle
-local autoFarmToggle = MainTab:Toggle({
-    Title = "Auto Farm Coins",
-    Desc = "Automatically collect coins",
+Tab:Select()
+
+local counterLabel = Tab:Button({
+    Title = "Candies Collected",
+    Desc = "0",
+    Locked = true,
+    Callback = function() end
+})
+local timerLabel = Tab:Button({
+    Title = "Time Active",
+    Desc = "0s",
+    Locked = true,
+    Callback = function() end
+})
+local rateLabel = Tab:Button({
+    Title = "Est. Candies/Hour",
+    Desc = "0",
+    Locked = true,
+    Callback = function() end
+})
+
+local autofarmToggle = Tab:Toggle({
+    Title = "Auto Farm",
+    Desc = "Toggle autofarming",
     Default = false,
     Callback = function(state)
-        autoFarmEnabled = state
-        print("Auto Farm:", state)
+        isActive = state
+        print("Autofarm toggle is now:", isActive)
+        if isActive then
+            collected = 0
+            startTime = tick()
+            visitedPositions = {}
+
+            -- Timer updater
+            task.spawn(function()
+                while isActive do
+                    local elapsed = tick() - startTime
+                    timerLabel:SetDesc(tostring(math.floor(elapsed)) .. "s")
+                    local rate = elapsed > 0 and math.floor((collected / elapsed) * 3600) or 0
+                    rateLabel:SetDesc(tostring(rate))
+                    task.wait(0.1)
+                end
+            end)
+
+            -- Main autofarm loop
+            task.spawn(function()
+                while isActive do
+                    character = player.Character or player.CharacterAdded:Wait()
+                    rootPart = character:FindFirstChild("HumanoidRootPart")
+                    if rootPart then
+                        local closest, shortest = nil, math.huge
+                        for _, obj in ipairs(workspace:GetDescendants()) do
+                            if obj:IsA("BasePart") and obj.Name == "Coin_Server" then -- <<<< CHANGE THIS IF NEEDED!
+                                local dist = (obj.Position - rootPart.Position).Magnitude
+                                if dist < shortest and dist < 250 and not visitedPositions[obj] then
+                                    closest = obj
+                                    shortest = dist
+                                end
+                            end
+                        end
+
+                        if closest and closest.Parent and closest:IsDescendantOf(workspace) then
+                            print("Flying to candy at:", closest.Position)
+                            local distance = (closest.Position - rootPart.Position).Magnitude
+                            local duration = distance / flySpeed
+                            local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear)
+                            local goal = {CFrame = CFrame.new(closest.Position)}
+                            local tween = TweenService:Create(rootPart, tweenInfo, goal)
+                            tween:Play()
+                            tween.Completed:Wait()
+                            visitedPositions[closest] = true
+                            collected += 1
+                            collectSound:Play()
+                            counterLabel:SetDesc(tostring(collected))
+                        end
+                    end
+                    task.wait(0.1)
+                end
+            end)
+        end
     end
 })
--- Auto Reset Toggle
-local autoResetToggle = MainTab:Toggle({
-    Title = "Auto Reset",
-    Desc = "Auto reset when bag is full",
-    Default = false,
-    Callback = function(state)
-        autoResetEnabled = state
-        print("Auto Reset:", state)
+
+Tab:Slider({
+    Title = "Fly Speed",
+    Desc = "Change flying speed",
+    Step = 1,
+    Value = {Min = 10, Max = 25, Default = 15},
+    Callback = function(val)
+        flySpeed = val
     end
 })
--- Disable Render Toggle
-local renderToggle = MainTab:Toggle({
-    Title = "Disable Render",
-    Desc = "Improves performance",
-    Default = false,
-    Callback = function(state)
-        disableRenderEnabled = state
-        RunService:Set3dRenderingEnabled(not state)
-        print("Disable Render:", state)
+
+Tab:Button({
+    Title = "Reset Counter",
+    Desc = "Resets stats",
+    Callback = function()
+        collected = 0
+        startTime = tick()
+        counterLabel:SetDesc("0")
+        timerLabel:SetDesc("0s")
+        rateLabel:SetDesc("0")
     end
 })
--- Anti-AFK Toggle
-MainTab:Toggle({
+
+Tab:Toggle({
     Title = "Anti-AFK",
     Desc = "Prevents kick for inactivity",
     Default = false,
@@ -117,143 +199,24 @@ MainTab:Toggle({
     end
 })
 
--- Improved Anti-AFK
 player.Idled:Connect(function()
     if antiAFK then
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new(0, 0))
-    end
-end)
--- Stats Tab
-local StatsTab = Window:Tab({
-    Title = "Stats",
-    Icon = "bar-chart"
-})
-local startTime = tick()
-local playTimeLabel = StatsTab:Button({
-    Title = "⏳ Time in Game",
-    Desc = "0d 0h 0m 0s",
-    Locked = true,
-    Callback = function() end
-})
-local coinCountLabel = StatsTab:Button({
-    Title = "💰 Coins Collected",
-    Desc = "0",
-    Locked = true,
-    Callback = function() end
-})
-local statusLabel = StatsTab:Button({
-    Title = "📊 Status",
-    Desc = "Waiting for round...",
-    Locked = true,
-    Callback = function() end
-})
--- Update time function
-task.spawn(function()
-    while true do
-        local delta = math.floor(tick() - startTime)
-        local d = math.floor(delta/86400)
-        local h = math.floor(delta%86400/3600)
-        local m = math.floor(delta%3600/60)
-        local s = delta%60
-        playTimeLabel:SetDesc(string.format("%dd %02dh %02dm %02ds", d, h, m, s))
+        VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
         task.wait(1)
+        VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
     end
 end)
--- Character functions
-local function getCharacter() 
-    return player.Character or player.CharacterAdded:Wait() 
-end
-local function getHRP() 
-    return getCharacter():WaitForChild("HumanoidRootPart") 
-end
--- Coin collection handler
-CoinCollected.OnClientEvent:Connect(function(_, current, max)
-    if current == max and not resetting and autoResetEnabled then
-        resetting = true
-        bag_full = true
-        local hrp = getHRP()
-        if start_position then
-            local tween = TweenService:Create(hrp, TweenInfo.new(2, Enum.EasingStyle.Linear), {CFrame = start_position})
-            tween:Play()
-            tween.Completed:Wait()
-        end
-        task.wait(0.5)
-        player.Character.Humanoid.Health = 0
-        player.CharacterAdded:Wait()
-        task.wait(1.5)
-        resetting = false
-        bag_full = false
-    end
-end)
--- Round handlers
-RoundStart.OnClientEvent:Connect(function()
-    farming = true
-    start_position = getHRP().CFrame
-    statusLabel:SetDesc("Farming active")
-end)
-RoundEnd.OnClientEvent:Connect(function()
-    farming = false
-    statusLabel:SetDesc("Round ended - waiting...")
-end)
--- Find nearest coin function
-local function get_nearest_coin()
-    local hrp = getHRP()
-    local closest, dist = nil, math.huge
-    for _, m in pairs(workspace:GetChildren()) do
-        if m:FindFirstChild("CoinContainer") then
-            for _, coin in pairs(m.CoinContainer:GetChildren()) do
-                if coin:IsA("BasePart") and coin:FindFirstChild("TouchInterest") then
-                    local d = (hrp.Position - coin.Position).Magnitude
-                    if d < dist then 
-                        closest, dist = coin, d 
-                    end
-                end
+
+RunService.Stepped:Connect(function()
+    if isActive and character then
+        for _, v in ipairs(character:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = false
             end
         end
     end
-    return closest, dist
-end
--- Main farming loop
-task.spawn(function()
-    local coinsCollected = 0
-    while true do
-        if autoFarmEnabled and farming and not bag_full then
-            local coin, dist = get_nearest_coin()
-            if coin then
-                local hrp = getHRP()
-                statusLabel:SetDesc("Moving to coin...")
-                
-                if dist > 150 then
-                    hrp.CFrame = coin.CFrame
-                else
-                    local tween = TweenService:Create(hrp, TweenInfo.new(dist / 20, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
-                    tween:Play()
-                    repeat 
-                        task.wait() 
-                    until not coin:FindFirstChild("TouchInterest") or not farming or not autoFarmEnabled
-                    tween:Cancel()
-                end
-                
-                -- Check if coin was collected
-                if not coin:FindFirstChild("TouchInterest") then
-                    coinsCollected = coinsCollected + 1
-                    coinCountLabel:SetDesc(tostring(coinsCollected))
-                end
-            else
-                statusLabel:SetDesc("No coins found")
-            end
-        elseif not autoFarmEnabled then
-            statusLabel:SetDesc("Auto Farm disabled")
-        elseif not farming then
-            statusLabel:SetDesc("Waiting for round start...")
-        elseif bag_full then
-            statusLabel:SetDesc("Bag full - resetting...")
-        end
-        task.wait(0.2)
-    end
 end)
--- Settings Tab
+
 local SettingsTab = Window:Tab({
     Title = "Settings",
     Icon = "settings"
@@ -261,22 +224,20 @@ local SettingsTab = Window:Tab({
 
 local Keybind = SettingsTab:Keybind({
     Title = "Keybind",
-    Desc = "Keybind to open UI",
+    Desc = "Keybind to open ui",
     Value = "G",
     Callback = function(v)
         Window:SetToggleKey(Enum.KeyCode[v])
     end
 })
--- Notifications when UI is minimized
+
 Window:OnToggle(function(isOpen)
     if not isOpen then
         WindUI:Notify({
-            Title = "UI Minimized! 🎃",
-            Content = "Press G to open the UI again",
+            Title = "Minimized!",
+            Content = "Press G again to open the UI.",
             Duration = 3,
-            Icon = "ghost",
+            Icon = "heart",
         })
     end
 end)
-print("🎃 Halloween MM2 Autofarm loaded successfully!")
-print("Press G to open/close the UI")
