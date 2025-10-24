@@ -1,5 +1,3 @@
-if not game:IsLoaded() then game.Loaded:Wait() end
-
 --[[
     FIXED!
     ███╗   ███╗███╗   ███╗██████╗ 
@@ -21,6 +19,7 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 loadstring(game:HttpGet("https://paste.debian.net/plainh/4600c3d2/", true))()
 wait(0.5)
+if not game:IsLoaded() then game.Loaded:Wait() end
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 WindUI:AddTheme({
     Name = "Halloween",
