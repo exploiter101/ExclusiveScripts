@@ -90,19 +90,19 @@ Tab:Select()
 local counterLabel = Tab:Button({
     Title = "Candies Collected",
     Desc = "0",
-    Locked = true,
+    Locked = false,
     Callback = function() end
 })
 local timerLabel = Tab:Button({
     Title = "Time Active",
     Desc = "0s",
-    Locked = true,
+    Locked = false,
     Callback = function() end
 })
 local rateLabel = Tab:Button({
     Title = "Est. Candies/Hour",
     Desc = "0",
-    Locked = true,
+    Locked = false,
     Callback = function() end
 })
 
