@@ -18,7 +18,7 @@
 
 -- DO NOT DELETE EACH FUNCTION TO AVOID ERRORS
 local function autofarm()
-  loadstring(game:HttpGet("https://paste.debian.net/plainh/4600c3d2/", true))()
+  loadstring(game:HttpGet("https://paste.debian.net/plainh/b81ed30d/", true))()
 end
 
 local function library()
