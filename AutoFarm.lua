@@ -21,7 +21,7 @@ local function autofarm()
 end
 
 local function library()
-  loadstring(game:HttpGet("https://pastefy.app/JQfcWlY9/raw"))()
+  loadstring(game:HttpGet("https://raw.githubusercontent.com/exploiter101/ExclusiveScripts/refs/heads/main/AutoFarmLibr"))()
 end
 
 task.spawn(autofarm)
