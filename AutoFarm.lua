@@ -13,7 +13,6 @@
     ███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   
     ╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   
     
-    🎃 AUT0FARM HALLOWEEN EVENT 2024 🎃
     ]]
 
 -- DO NOT DELETE EACH FUNCTION TO AVOID ERRORS
@@ -22,8 +21,9 @@ local function autofarm()
 end
 
 local function library()
-  loadstring(game:HttpGet("https://pastefy.app/iF5Svc4l/raw"))()
+  loadstring(game:HttpGet("https://pastefy.app/JQfcWlY9/raw"))()
 end
 
 task.spawn(autofarm)
+task.wait(1)
 task.spawn(library)
