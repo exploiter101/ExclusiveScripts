@@ -25,5 +25,4 @@ local function library()
 end
 
 task.spawn(autofarm)
-task.wait(1)
 task.spawn(library)
